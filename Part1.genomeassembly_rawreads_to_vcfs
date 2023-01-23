@@ -1,0 +1,80 @@
+## Part 1: raw reads --> mapped genomes --> vcfs ##
+
+#copy out RG info from file header of raw reads
+zcat Name_R1.fastq.gz | head
+
+#trim raw reads 
+java -jar /path/Trimmomatic-0.38/trimmomatic-0.38.jar PE ./Name_R1.fastq.gz ./Name_R2.fastq.gz Name_R1_Trimmed.fastq.gz Name_R1_Unpaired.fastq.gz \
+Name_R2_Trimmed.fastq.gz Name_R2_Unpaired.fastq.gz ILLUMINACLIP:/path/TruSeq3-PE-2.fa:2:30:10 SLIDINGWINDOW:4:30 MINLEN:36 
+
+#align to the reference genome 
+bowtie2 --local -p 8 --un-conc ./FailedAlign_Name -x reference.fasta \
+-q -1 ./Name_R1_Trimmed.fq.gz -2 ./Name_R2_Trimmed.fq.gz -S NameMapped.sam 
+
+#convert sam files to bam files
+samtools view -bS NameMapped.sam > NameMapped.bam 
+
+#sort bam files
+samtools sort NameMapped.bam -o Name_Sorted.bam 
+
+#add RG - fill in RGLB and RGSM
+java -jar ./picard.jar AddOrReplaceReadGroups I=Name_Sorted.bam O=Name_SortedRG.bam RGLB=### RGPL=illumina RGPU=none RGSM=#####
+
+#remove duplicates
+java -Xmx32g -Djava.io.tmpdir=`pwd`/tmp -jar ./picard.jar MarkDuplicates I=Name_SortedRG.bam REMOVE_DUPLICATES=true O=Name_NoDupsRG.bam M=marked_dup_metricsName.txt 
+
+#remove secondary alignments
+sambamba view --nthreads=30 --with-header --format=bam --show-progress -F "mapping_quality >= 1 and not (unmapped or secondary_alignment) and not ([XA] != null or [SA] != null)" ./Name_NoDupsRG.bam -o ./unique/Name.unique_reads.bam 
+
+#clip overlap
+bam clipOverlap --in Name.unique_reads.bam --out Name_clip.bam --stats
+
+#filter for mapping quality
+samtools view -b -q 20 Name_clip.bam > Name_filter_q20.bam
+
+#check quality
+fastqc Name_filter_q20.bam 
+samtools flagstat Name_filter_q20.bam 
+
+#check depth of coverage 
+samtools depth -a Name_filter_q20.bam  > Name.coverage 
+awk '{sum += $3} END {print "Average = ", sum/NR}' Name.coverage > Name.Average 
+
+#subset to make bams with an average depth of 4x and 8x
+#here an example where I subsample 29.8% of mapped reads to obtain an average depth of 4x
+samtools view -s 0.298249277 -b Name_filter_q20.bam > Name_sub4x.bam
+
+#index bams 
+samtools index ./Name_sub4x.bam 
+
+#make individual vcfs from bams
+gatk --java-options "-Xmx12g" HaplotypeCaller  --native-pair-hmm-threads 16 -R reference.fasta -I Name_sub4x.bam -O ./vcfs/Name_sub4x.vcf.gz -ERC GVCF
+
+#combine vcfs
+gatk --java-options "-Xmx12g" CombineGVCFs -R reference.fasta \
+--variant Name1_sub4x.vcf.gz \
+--variant Name2_sub4x.vcf.gz \
+--variant Name3_sub4x.vcf.gz \
+--variant Name4_sub4x.vcf.gz \
+--variant Name5_sub4x.vcf.gz \
+--variant Name6_sub4x.vcf.gz \
+--variant Name7_sub4x.vcf.gz \
+--variant Name8_sub4x.vcf.gz \
+--variant Name9_sub4x.vcf.gz \
+--variant Name10_sub4x.vcf.gz \
+--variant Name11_sub4x.vcf.gz \
+--variant Name12_sub4x.vcf.gz \
+--variant Name13_sub4x.vcf.gz \
+--variant Name14_sub4x.vcf.gz \
+--variant Name15_sub4x.vcf.gz \
+--variant Name16_sub4x.vcf.gz \
+--variant Name17_sub4x.vcf.gz \
+--variant Name18_sub4x.vcf.gz \
+--variant Name19_sub4x.vcf.gz \
+--variant Name20_sub4x.vcf.gz \
+--variant Name21_sub4x.vcf.gz \
+--variant Name22_sub4x.vcf.gz \
+-O all4x_combined.vcf.gz
+
+#joint genotype combined vcf
+gatk --java-options "-Xmx12g" GenotypeGVCFs -R reference.fasta -V all4x_combined.vcf.gz -o all4x_combined_gt.vcf.gz
