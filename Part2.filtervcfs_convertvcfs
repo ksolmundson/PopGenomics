@@ -73,7 +73,7 @@ gzip caribou.treemix
 
 ## create RZooRoH input ##
 #convert vcf to Oxford gen for RZooRoH
-plink --vcf caribouonly.vcf --recode oxford --autosome --chr-set 35 --allow-extra-chr --allow-no-sex --out caribouonly_filter_OxGen
+plink --vcf caribouonly.vcf --recode oxford --allow-extra-chr --out caribouonly_filter_OxGen
 
 ## create PLINK input ##
 #convert vcf to PLINK inputs
