@@ -1,4 +1,4 @@
-# highcoverage_pophistory
+#pophistory assembly and analyses for whole genomes
 
 ##Part 1: map raw reads, call SNPs, create grouped genotyped vcfs 
 
