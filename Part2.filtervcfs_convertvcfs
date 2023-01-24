@@ -1,0 +1,80 @@
+## filter vcfs ##
+
+#filter to retain only large autosomes (Sc1-Sc35)
+vcftools --gzvcf all4x_gt.vcf.gz \
+--recode --recode-INFO-all \
+--chr Scaffold_1__1_contigs__length_105830641 \
+--chr Scaffold_2__1_contigs__length_105720425 \
+--chr Scaffold_3__1_contigs__length_98484173 \
+--chr Scaffold_4__1_contigs__length_95516856 \
+--chr Scaffold_5__1_contigs__length_88707939 \
+--chr Scaffold_6__1_contigs__length_78660257 \
+--chr Scaffold_7__1_contigs__length_76598661 \
+--chr Scaffold_8__1_contigs__length_74515151 \
+--chr Scaffold_9__1_contigs__length_73370212 \
+--chr Scaffold_10__1_contigs__length_71882928 \
+--chr Scaffold_11__1_contigs__length_71722256 \
+--chr Scaffold_12__1_contigs__length_70729243 \
+--chr Scaffold_13__1_contigs__length_64420026 \
+--chr Scaffold_14__1_contigs__length_63882479 \
+--chr Scaffold_15__1_contigs__length_60884402 \
+--chr Scaffold_16__1_contigs__length_58151267 \
+--chr Scaffold_17__1_contigs__length_58114382 \
+--chr Scaffold_18__1_contigs__length_56797614 \
+--chr Scaffold_19__1_contigs__length_56497257 \
+--chr Scaffold_20__1_contigs__length_56468500 \
+--chr Scaffold_21__1_contigs__length_55962668 \
+--chr Scaffold_22__2_contigs__length_90779511 \
+--chr Scaffold_23__1_contigs__length_52941587 \
+--chr Scaffold_24__1_contigs__length_50610184 \
+--chr Scaffold_25__1_contigs__length_50089988 \
+--chr Scaffold_26__1_contigs__length_49121615 \
+--chr Scaffold_27__1_contigs__length_46270819 \
+--chr Scaffold_28__2_contigs__length_55391097 \
+--chr Scaffold_29__1_contigs__length_44221850 \
+--chr Scaffold_30__1_contigs__length_44152186 \
+--chr Scaffold_31__1_contigs__length_41113554 \
+--chr Scaffold_32__1_contigs__length_40033141 \
+--chr Scaffold_33__1_contigs__length_38490101 \
+--chr Scaffold_34__1_contigs__length_35645791 \
+--chr Scaffold_35__1_contigs__length_7018265 \
+--out all4x_autosomes
+
+#filter to remove low quality genotype calls (GQ<20), genotypes with >50% missing data, indels, non bi-allelic sites, and sites with extremely low or high depth (<2 or >20)
+vcftools --vcf all4x_autosomes.recode.vcf --minGQ 20 --max-missing 0.5 --remove-indels --min-meanDP 2 --max-meanDP 20 --min-alleles 2 --max-alleles 2 --recode --recode-INFO-all --out all4x_autosomes_filter
+
+
+## convert from VCF to inputs for downstream analyses ##
+## create NGSAdmix input ##
+#convert vcf to beagle format for NGSAdmix with atlas #use the caribou vcf file (no outgroup)
+./atlas/atlas task=VCFToBeagle vcf=caribouonly.vcf
+
+## create Treemix input ##
+#edit vcf header to make treemix input
+#first remove lines from the start - check where SNP data starts: head -2200 input.vcf
+sed '1,2173d' caribouonly.vcf > caribouonly_newheader.vcf
+
+#add new headers
+sed '1 i #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tEMO20917\tBRG21332\tBON21401\tLSR21681\tLSR22426\tBON22832\tEMQ27689\tEMQ27694\tEMO34590\tBMB35324\tBMB35326\tLSR39590\tLSR39650\tLSR39651\tLSR39653\tBON39654\tBON45932\tBON45933\tLSR45994' -i caribouonly_newheader.vcf
+sed '1 i ##fileformat=VCFv4.2' -i caribouonly_newheader.vcf
+
+#make a popmap file listing individual IDs (from vcf header) in column 1 and population name in column 2
+#convert vcf to Treemix input with stacks #use the caribou vcf file (no outgroup)
+populations -V caribouonly_newheader.vcf -M popmap -O ./Treemix/caribou --treemix 
+
+#remove lines added by stacks
+sed '1,2d' caribou.treemix > caribou.treemix
+
+#add population line (an example using three letter codes from popmap file)
+sed '1 i EMO BRG BON LSR EMQ BMB' -i caribou.treemix
+
+#gzip the treemix file
+gzip caribou.treemix
+
+## create RZooRoH input ##
+#convert vcf to Oxford gen for RZooRoH
+plink --vcf caribouonly.vcf --recode oxford --autosome --chr-set 35 --allow-extra-chr --allow-no-sex --out caribouonly_filter_OxGen
+
+## create PLINK input ##
+#convert vcf to PLINK inputs
+plink --vcf caribouonly.vcf --make-bed --allow-extra-chr --allow-no-sex --out caribou_plink
