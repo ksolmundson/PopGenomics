@@ -59,6 +59,27 @@ sed '1 i #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tEMO20917\tBRG213
 sed '1 i ##fileformat=VCFv4.2' -i caribouonly_newheader.vcf
 
 #make a popmap file listing individual IDs (from vcf header) in column 1 and population name in column 2
+EMO1    EMO
+BRG1    BRG
+BRG2    BRG
+RED1    RED
+TSI1    TSI
+PIC1    PIC
+HRT1    HRT
+EMQ1    EMQ
+EMQ2    EMQ
+EMO2    EMO
+BMB1    BMB
+BMB2    BMB
+IGN1    IGN
+MIC1    MIC
+MIC2    MIC
+PUK1    PUK
+COC1    COC
+NIP1    NIP
+NIP2    NIP
+TSI2    TSI
+
 #convert vcf to Treemix input with stacks #use the caribou vcf file (no outgroup)
 populations -V caribouonly_newheader.vcf -M popmap -O ./Treemix/caribou --treemix 
 
@@ -66,7 +87,7 @@ populations -V caribouonly_newheader.vcf -M popmap -O ./Treemix/caribou --treemi
 sed '1,2d' caribou.treemix > caribou.treemix
 
 #add population line (an example using three letter codes from popmap file)
-sed '1 i EMO BRG BON LSR EMQ BMB' -i caribou.treemix
+sed '1 i EMO BRG RED TSI PIC HRT EMQ BMB NEY MIC PUK COC NIP' -i caribou.treemix
 
 #gzip the treemix file
 gzip caribou.treemix
