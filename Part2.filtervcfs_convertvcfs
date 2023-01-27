@@ -1,7 +1,7 @@
 ## filter vcfs ##
 
 #filter to retain only large autosomes (Sc1-Sc35)
-vcftools --gzvcf all4x_gt.vcf.gz \
+vcftools --gzvcf allcaribou.vcf.gz \
 --recode --recode-INFO-all \
 --chr Scaffold_1__1_contigs__length_105830641 \
 --chr Scaffold_2__1_contigs__length_105720425 \
@@ -38,50 +38,54 @@ vcftools --gzvcf all4x_gt.vcf.gz \
 --chr Scaffold_33__1_contigs__length_38490101 \
 --chr Scaffold_34__1_contigs__length_35645791 \
 --chr Scaffold_35__1_contigs__length_7018265 \
---out all4x_autosomes
+--out allcaribou_autosomes
 
 #filter to remove low quality genotype calls (GQ<20), genotypes with >50% missing data, indels, non bi-allelic sites, and sites with extremely low or high depth (<2 or >20)
-vcftools --vcf all4x_autosomes.recode.vcf --minGQ 20 --max-missing 0.5 --remove-indels --min-meanDP 2 --max-meanDP 20 --min-alleles 2 --max-alleles 2 --recode --recode-INFO-all --out all4x_autosomes_filter
+vcftools --vcf allcaribou_autosomes.recode.vcf --minGQ 20 --max-missing 0.5 --remove-indels --min-meanDP 2 --max-meanDP 20 --min-alleles 2 --max-alleles 2 --recode --recode-INFO-all --out allcaribou_autosomes_filter
 
+#make another version with no missing data and remove NAs (for PCA plotting)
+vcftools --vcf allcaribou_autosomes_filter.recode.vcf --max-missing 1 --recode --recode-INFO-all --out allcaribou_autosomes_filter_nomissing
+
+grep -vw "NaN" allcaribou_autosomes_filter_nomissing.recode.vcf > allcaribou_autosomes_filter_nomiss_noNA.vcf
 
 ## convert from VCF to inputs for downstream analyses ##
 ## create NGSAdmix input ##
 #convert vcf to beagle format for NGSAdmix with atlas #use the caribou vcf file (no outgroup)
-./atlas/atlas task=VCFToBeagle vcf=caribouonly.vcf
+./atlas/atlas task=VCFToBeagle vcf=allcaribou_autosomes_filter.recode.vcf
 
 ## create Treemix input ##
 #edit vcf header to make treemix input
 #first remove lines from the start - check where SNP data starts: head -2200 input.vcf
-sed '1,2173d' caribouonly.vcf > caribouonly_newheader.vcf
+sed '1,2173d' allcaribou_autosomes_filter.recode.vcf > allcaribou_newheader.vcf
 
 #add new headers
-sed '1 i #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tEMO20917\tBRG21332\tBON21401\tLSR21681\tLSR22426\tBON22832\tEMQ27689\tEMQ27694\tEMO34590\tBMB35324\tBMB35326\tLSR39590\tLSR39650\tLSR39651\tLSR39653\tBON39654\tBON45932\tBON45933\tLSR45994' -i caribouonly_newheader.vcf
-sed '1 i ##fileformat=VCFv4.2' -i caribouonly_newheader.vcf
+sed '1 i #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tEM20917\tBG21332\tBO21401\tLS21681\tLS22426\tBO22832\tEM27689\tEM27694\tE34590\tBO35324\tBO35326\tLS39590\tLS39650\tLS39651\tLS39653\tBO39654\tBO45932\tBO45933\tLS45994' -i allcaribou_newheader.vcf
+sed '1 i ##fileformat=VCFv4.2' -i allcaribou_newheader.vcf
 
 #make a popmap file listing individual IDs (from vcf header) in column 1 and population name in column 2
-EMO1    EMO
-BRG1    BRG
-BRG2    BRG
-RED1    RED
-TSI1    TSI
-PIC1    PIC
-HRT1    HRT
-EMQ1    EMQ
-EMQ2    EMQ
-EMO2    EMO
-BMB1    BMB
-BMB2    BMB
-IGN1    IGN
-MIC1    MIC
-MIC2    MIC
-PUK1    PUK
-COC1    COC
-NIP1    NIP
-NIP2    NIP
-TSI2    TSI
+EM20917    EMO
+BG21332    BRG
+BG21350    BRG
+BO21401    RED
+LS21681    TSI
+LS22426    PIC
+BO22832    HRT
+EM27689    EML
+EM27694    EML
+EM34590    EMO
+B035324    BMB
+B035326    BMB
+LS39590    NEY
+LS39650    MIC
+LS39651    MIC
+LS39653    PUK
+BO39654    COC
+BO45932    NIP
+BO45933    NIP
+LS45994    TSI
 
 #convert vcf to Treemix input with stacks #use the caribou vcf file (no outgroup)
-populations -V caribouonly_newheader.vcf -M popmap -O ./Treemix/caribou --treemix 
+populations -V allcaribou_newheader.vcf -M popmap -O ./Treemix/caribou --treemix 
 
 #remove lines added by stacks
 sed '1,2d' caribou.treemix > caribou.treemix
@@ -94,8 +98,8 @@ gzip caribou.treemix
 
 ## create RZooRoH input ##
 #convert vcf to Oxford gen for RZooRoH
-plink --vcf caribouonly.vcf --recode oxford --allow-extra-chr --out caribouonly_filter_OxGen
+plink --vcf allcaribou_autosomes_filter.recode.vcf --recode oxford --allow-extra-chr --out caribouonly_filter_OxGen
 
 ## create PLINK input ##
 #convert vcf to PLINK inputs
-plink --vcf caribouonly.vcf --make-bed --allow-extra-chr --allow-no-sex --out caribou_plink
+plink --vcf allcaribou_autosomes_filter.recode.vcf --make-bed --allow-extra-chr --allow-no-sex --out caribou_plink
