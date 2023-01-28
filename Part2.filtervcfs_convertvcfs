@@ -40,7 +40,7 @@ vcftools --gzvcf allcaribou.vcf.gz \
 --chr Scaffold_35__1_contigs__length_7018265 \
 --out allcaribou_autosomes
 
-#filter to remove low quality genotype calls (GQ<20), genotypes with >50% missing data, indels, non bi-allelic sites, and sites with extremely low (<2) or high depth (>60 for mid/high coverage or >20 for lower coverage)
+#filter to remove low quality genotype calls (GQ<20), genotypes with >50% missing data, indels, non bi-allelic sites, and sites with extremely low (<2) or high depth (>60 for mid/high coverage or >15 for lower coverage)
 vcftools --vcf allcaribou_autosomes.recode.vcf --minGQ 20 --max-missing 0.5 --remove-indels --min-meanDP 2 --max-meanDP 60 --min-alleles 2 --max-alleles 2 --recode --recode-INFO-all --out allcaribou_autosomes_filter
 
 #make another version with no missing data and remove NAs (for PCA plotting)
