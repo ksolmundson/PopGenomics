@@ -1,0 +1,67 @@
+## run NGSAdmix ##
+
+# submit as a loop 
+for k in $(cat klist.txt)
+do
+echo ${k}
+sbatch NGSadmix.sh ${k}
+sleep 10
+done
+
+##to the bash script file NGSadmix.sh add #SBATCH --array=1-10 to perform 10 runs at each K
+module load angsd/0.936
+NGSadmix -likes midhigh_autosomes_filter_final_more.recode.beagle.gz -K ${1} -o midhigh_K${1} -P 12
+
+#####################################
+
+## plot PCA from VCF in R ##
+## ran on compute canada - needs a lot of memory and x11 forwarding #ask for an interactive node
+
+install.packages("adegenet", repos="https://cloud.r-project.org/")
+install.packages("vcfR", repos="https://cloud.r-project.org/")
+library(adegenet)
+library(vcfR)
+
+vcf <- read.vcfR("midhigh_nomiss_noNA.vcf")
+
+#Get some stats
+chrom <- create.chromR(name='WGS', vcf=vcf)
+plot(chrom)
+
+#convert to genlight object
+vcf.genlight <- vcfR2genlight(vcf)
+
+#assign pop names 
+pop(vcf.genlight) <- c("EM20917", "BG21332", "BG21350","BO21401","LS21681","LS22426", "BO22832","EM27689", "EM27694","EM34590", "BO35324", "BO35326", "LS39590", "LS39650", "LS39651", "LS39653", "BO39654", "BO45932", "BO45933","LS45994")
+
+#assign colours by alphabetical order
+col_vec = c('#8370bf','#8370bf','#5C8944','#5C8944','#5C8944','#5C8944','#5C8944', '#5C8944','#5C8944','#EE7F7F','#EE7F7F','#EE7F7F','#EE7F7F','#175676', '#175676', '#175676' , '#175676', '#175676', '#175676', '#175676')
+
+#do PCA
+PCA <- glPca(vcf.genlight)
+
+#Select number of axes to keep
+20
+
+#create plot
+tiff("PCA_label_IDs.tiff", units="in", width=10, height=10, res=400)
+s.class(PCA$scores, vcf.genlight$pop, xax = 1, yax = 2, addaxes = TRUE, cellipse = 1.5, axesell = TRUE, grid = FALSE, origin = c(0,0), include.origin = TRUE, clabel=0.7, col=col_vec)
+add.scatter.eig(posi = c("bottomleft"), PCA$eig[1:18], nf=2,xax=1,yax=2)
+dev.off() 
+
+#How much variance explained
+cumVarPCA <- 100 * cumsum(PCA$eig)/sum(PCA$eig)
+#view 
+cumVarPCA
+
+#Plot the cumulative variance
+pdf("cumvarPCA.pdf") 
+plot(cumVarPCA, xlab="Number of retained PCs", ylab="Cumulative variance (%)", main="Variance explained by PCA")
+dev.off() 
+
+##done plotting in R
+q()
+
+##################################
+
+
