@@ -1,21 +1,5 @@
-## run NGSAdmix ##
-
-# submit as a loop 
-for k in $(cat klist.txt)
-do
-echo ${k}
-sbatch NGSadmix.sh ${k}
-sleep 10
-done
-
-##to the bash script file NGSadmix.sh add #SBATCH --array=1-10 to perform 10 runs at each K
-module load angsd/0.936
-NGSadmix -likes midhigh_autosomes_filter_final_more.recode.beagle.gz -K ${1} -o midhigh_K${1} -P 12
-
-#####################################
-
 ## plot PCA from VCF in R ##
-## ran on compute canada - needs a lot of memory and x11 forwarding #ask for an interactive node
+## ran on Compute Canada - needs a lot of memory and x11 forwarding #ask for an interactive node
 
 install.packages("adegenet", repos="https://cloud.r-project.org/")
 install.packages("vcfR", repos="https://cloud.r-project.org/")
@@ -61,7 +45,5 @@ dev.off()
 
 ##done plotting in R
 q()
-
-##################################
 
 
