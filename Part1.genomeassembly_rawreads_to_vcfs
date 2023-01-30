@@ -40,41 +40,37 @@ samtools flagstat Name_filter_q20.bam
 samtools depth -a Name_filter_q20.bam  > Name.coverage 
 awk '{sum += $3} END {print "Average = ", sum/NR}' Name.coverage > Name.Average 
 
-#subset to make bams with an average depth of 4x and 8x
-#here an example where I subsample 29.8% of mapped reads to obtain an average depth of 4x
-samtools view -s 0.298249277 -b Name_filter_q20.bam > Name_sub4x.bam
-
 #index bams 
 samtools index ./Name_sub4x.bam 
 
 #make individual vcfs from bams
-gatk --java-options "-Xmx12g" HaplotypeCaller  --native-pair-hmm-threads 16 -R reference.fasta -I Name_sub4x.bam -O ./vcfs/Name_sub4x.vcf.gz -ERC GVCF
+gatk --java-options "-Xmx12g" HaplotypeCaller  --native-pair-hmm-threads 16 -R reference.fasta -I Name_filter_q20.bam -O ./vcfs/Name.vcf.gz -ERC GVCF
 
 #combine vcfs
 gatk --java-options "-Xmx12g" CombineGVCFs -R reference.fasta \
---variant Name1_sub4x.vcf.gz \
---variant Name2_sub4x.vcf.gz \
---variant Name3_sub4x.vcf.gz \
---variant Name4_sub4x.vcf.gz \
---variant Name5_sub4x.vcf.gz \
---variant Name6_sub4x.vcf.gz \
---variant Name7_sub4x.vcf.gz \
---variant Name8_sub4x.vcf.gz \
---variant Name9_sub4x.vcf.gz \
---variant Name10_sub4x.vcf.gz \
---variant Name11_sub4x.vcf.gz \
---variant Name12_sub4x.vcf.gz \
---variant Name13_sub4x.vcf.gz \
---variant Name14_sub4x.vcf.gz \
---variant Name15_sub4x.vcf.gz \
---variant Name16_sub4x.vcf.gz \
---variant Name17_sub4x.vcf.gz \
---variant Name18_sub4x.vcf.gz \
---variant Name19_sub4x.vcf.gz \
---variant Name20_sub4x.vcf.gz \
---variant Name21_sub4x.vcf.gz \
---variant Name22_sub4x.vcf.gz \
--O all4x_combined.vcf.gz
+--variant Name1.vcf.gz \
+--variant Name2.vcf.gz \
+--variant Name3.vcf.gz \
+--variant Name4.vcf.gz \
+--variant Name5.vcf.gz \
+--variant Name6.vcf.gz \
+--variant Name7.vcf.gz \
+--variant Name8.vcf.gz \
+--variant Name9.vcf.gz \
+--variant Name10.vcf.gz \
+--variant Name11.vcf.gz \
+--variant Name12.vcf.gz \
+--variant Name13.vcf.gz \
+--variant Name14.vcf.gz \
+--variant Name15.vcf.gz \
+--variant Name16.vcf.gz \
+--variant Name17.vcf.gz \
+--variant Name18.vcf.gz \
+--variant Name19.vcf.gz \
+--variant Name20.vcf.gz \
+--variant Name21.vcf.gz \
+--variant Name22.vcf.gz \
+-O allcaribou_combined.vcf.gz
 
 #joint genotype combined vcf
-gatk --java-options "-Xmx12g" GenotypeGVCFs -R reference.fasta -V all4x_combined.vcf.gz -o all4x_combined_gt.vcf.gz
+gatk --java-options "-Xmx12g" GenotypeGVCFs -R reference.fasta -V allcaribou_combined.vcf.gz -o allcaribou_combined_gt.vcf.gz
