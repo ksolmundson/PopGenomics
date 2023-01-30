@@ -1,7 +1,7 @@
 ## filter vcfs ##
 
 #filter to retain only large autosomes (Sc1-Sc35)
-vcftools --gzvcf allcaribou.vcf.gz \
+vcftools --gzvcf allcaribou_combined_gt.vcf.gz \
 --recode --recode-INFO-all \
 --chr Scaffold_1__1_contigs__length_105830641 \
 --chr Scaffold_2__1_contigs__length_105720425 \
