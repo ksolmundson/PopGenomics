@@ -1,8 +1,8 @@
 #pophistory assembly and analyses for whole genomes
 
-##Part 1: map raw reads, call SNPs, create grouped genotyped vcfs 
+##Part 1: trim and align reads, filter BAM, call SNPs, create grouped genotyped VCFs 
 
-##Part 2: filter vcfs & convert to inputs for analyses 
+##Part 2: filter VCFs & convert to inputs for analyses 
 
 ##Parts 3: Run NGSadmix, plot outputs in R, compare log likelihoods across runs
 
