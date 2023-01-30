@@ -1,0 +1,74 @@
+##run plink on VCF file
+
+module load plink/1.9b_6.21-x86_64
+plink --vcf allcaribou_auto.recode.vcf --homozyg --allow-extra-chr --homozyg-snp 15 --homozyg-kb 100 --homozyg-density 20 --homozyg-gap 1000 --homozyg-window-snp 15 --homozyg-window-het 5 --homozyg-window-missing 5 --homozyg-window-threshold 0.05 --out caribou_plink_roh
+
+##convert the output with suffix .hom.indiv to a CSV
+#add 2 letter population codes to the FID column
+
+#then import into R for plotting
+
+library(tidyverse)
+
+#import data
+plinkROH = read_csv("20ind_ROH_plink.csv", col_names = T)
+
+#pull the first start of each ID name to create a population column 
+plinkROH$pop<-substr(plinkROH$FID,1,2)
+
+#Order IDs for plotting #the default is alphabetical 
+#FID is the x axis order for the bar plot #pop is the order the legend will appear 
+plinkROH$FID <- factor(plinkROH$FID, levels = c("BG21332", "BG21350", "EM20917", "EM34590", "EM27689", "EM27694", "BO35324", "BO35326", "BO39654", "BO22832","BO21401", "BO45932", "BO45933", "LS39653", "LS22426", "LS39590", "LS39650", "LS39651","LS21681" , "LS45994"))
+plinkROH$pop <- factor(plinkROH$pop, levels = c("BG", "EM", "BO", "LS"), labels = c("Barrenground", "Eastern Migratory", "Boreal", "Lake Superior"))
+
+#create FROH plot
+FROHplot <- ggplot(data=plinkROH, aes(x=FID, y=FROH, fill=pop)) +
+  geom_bar(stat="identity") + 
+  scale_fill_manual(values=c('#8370bf','#EE7F7F', '#5C8944', '#175676')) +
+  scale_x_discrete(guide = guide_axis(angle = 90)) +
+  xlab("Caribou ID") +
+  labs(fill = "Legend") +
+  theme_bw()  +
+  annotate("text", x = 1, y=0.5, label="A") 
+
+#create number of ROH plot
+N_ROHplot <- ggplot(data=plinkROH, aes(x=FID, y=NSEG, fill=pop)) +
+  geom_bar(stat="identity") + 
+  scale_fill_manual(values=c('#8370bf','#EE7F7F', '#5C8944', '#175676')) +
+  scale_x_discrete(guide = guide_axis(angle = 90)) +
+  xlab("Caribou ID") +
+  ylab("Number of ROH") +
+  labs(fill = "Legend") +
+  theme_bw()  +
+  annotate("text", x = 1, y=3400, label="B") 
+
+#create total length ROH plot
+length_ROHplot <- ggplot(data=plinkROH, aes(x=FID, y=KB, fill=pop)) +
+  geom_bar(stat="identity") + 
+  scale_fill_manual(values=c('#8370bf','#EE7F7F', '#5C8944', '#175676')) +
+  scale_x_discrete(guide = guide_axis(angle = 90)) +
+  xlab("Caribou ID") +
+  ylab("Total Length of ROH (kb)") +
+  labs(fill = "Legend") +
+  theme_bw()  +
+  annotate("text", x = 1, y=11e+05, label="C") 
+
+#create average length ROH plot
+avlength_ROHplot <- ggplot(data=plinkROH, aes(x=FID, y=KBAVG, fill=pop)) +
+  geom_bar(stat="identity") + 
+  scale_fill_manual(values=c('#8370bf','#EE7F7F', '#5C8944', '#175676')) +
+  scale_x_discrete(guide = guide_axis(angle = 90)) +
+  xlab("Caribou ID") +
+  ylab("Mean Length of ROH (kb)") +
+  labs(fill = "Legend") +
+  theme_bw()  +
+  annotate("text", x = 1, y=340, label="D") 
+
+#plot all 4 together and save the plot
+library("patchwork")
+
+FROHplot + N_ROHplot + length_ROHplot + avlength_ROHplot + plot_layout(ncol=2, nrow=2, guides="collect") & theme(legend.position="right")
+
+ggsave("plink_ROH_fig3.pdf", dpi=300, width=11, height=8.5, units="in")
+ggsave("plink_ROH_fig3.png", width=11, height=8.5, units="in")
+
