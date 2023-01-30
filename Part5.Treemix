@@ -1,0 +1,46 @@
+##requires treemix input file and popmap file created in Part 2
+
+## run Treemix ##
+#can submit as an array on Compute Canada to run 10 iterations of each m value
+#file mlist.txt should have a list of numbers including 0 (no migration)
+
+# submit as a loop 
+for m in $(cat mlist.txt)
+do
+echo ${m}
+sbatch Treemix.sh ${m}
+sleep 10
+done
+
+##to the bash script file called "Treemix.sh" add #SBATCH --array=1-10 to perform 10 runs at each K
+#The '-k' groups SNPs to account for possible linkage. Run multiple iterations with at least two different k values 
+
+module load treemix
+treemix -i ./Treemix/input.treemix.gz -k 1000 -m ${1} -o ./Treemix/output_Treemix_k1000_m${1}
+treemix -i ./Treemix/input.treemix.gz -k 2000 -m ${1} -o  ./Treemix/output_Treemix_k2000_m${1}
+treemix -i ./Treemix/input.treemix.gz -k 500 -m ${1} -o ./Treemix/output_Treemix_k500_m${1}
+
+#then plot in R
+#the script is provided in the Treemix program directory
+
+source("plotting_funcs.R")
+
+#plotting example
+#no migration events
+#k1000
+#iteration number 1
+plot_tree("output_Treemix_k1000_m0_1", ybar=1) 
+
+plot_resid("output_Treemix_k1000_m0_1", "poporder.txt")
+
+#add hoc test for number of migration events
+
+install.packages("SiZer")
+install.packages("OptM")
+library(SiZer)
+library(OptM)
+
+migration = optM("./migration", tsv = "migration.tsv") 
+
+plot_optM(migration, plot = F, pdf = "migration.pdf")
+
