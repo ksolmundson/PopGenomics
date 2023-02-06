@@ -72,3 +72,91 @@ FROHplot + N_ROHplot + length_ROHplot + avlength_ROHplot + plot_layout(ncol=2, n
 ggsave("plink_ROH_fig3.pdf", dpi=300, width=11, height=8.5, units="in")
 ggsave("plink_ROH_fig3.png", width=11, height=8.5, units="in")
 
+
+##divide the ROH based on length
+# in linux: 
+#250kb-1Mb (we later dividied this category in R)
+cat caribou_plink_roh.hom | awk '$9>250' | awk '$9<1001' > bin2_plinkROH.list
+#1Mb-2Mb
+cat caribou_plink_roh_test.hom | awk '$9>1000' | awk '$9<2001' > bin3_plinkROH.list
+#>2Mb
+cat caribou_plink_roh_test.hom | awk '$9>2000' > bin4_plinkROH.list
+
+#save files as CSVs to plot in R
+
+# in R 
+# First, we need to install and load the ggplot2 library
+install.packages("ggplot2")
+library(ggplot2)
+library(RColorBrewer)
+
+# Next, we can read in the data using the read.csv function
+#we have 3 csv files with ROH: 250-1Mb, 1-2MB, and >2mb
+
+df_short <- read.csv("bin2_ID_length.csv", header =F)
+df_mid <- read.csv("bin3_ID_length.csv", header = F)
+df_long <- read.csv("plinkROH_over2Mb_bin.csv", header = F)
+
+#df_short has way more data than the others
+#split it into 250-500 and 500-1mb categories
+df_250 <- df_short[df_short$V2 < 500, ]
+df_500 <- df_short[df_short$V2 > 500, ]
+
+#add a column for size class to each df
+df_250$bin <- 1
+df_500$bin <- 2
+df_mid$bin <- 3
+df_long$bin <- 4
+
+#combine dfs
+ROHdf <- rbind(df_250, df_500, df_mid, df_long)
+
+#add ID labels
+as.factor(ROHdf$V1)
+ROHdf$V1[ROHdf$V1 == "20917"] <- "EM20917"
+ROHdf$V1[ROHdf$V1 == "21332"] <- "BG21332"
+ROHdf$V1[ROHdf$V1 == "21350"] <- "BG21350"
+ROHdf$V1[ROHdf$V1 == "34590"] <- "EM34590"
+ROHdf$V1[ROHdf$V1 == "45932"] <- "BO45932"
+ROHdf$V1[ROHdf$V1 == "45933"] <- "BO45933"
+ROHdf$V1[ROHdf$V1 == "27689"] <- "EM27689"
+ROHdf$V1[ROHdf$V1 == "27694"] <- "EM27694"
+ROHdf$V1[ROHdf$V1 == "35324"] <- "BO35324"
+ROHdf$V1[ROHdf$V1 == "35326"] <- "BO35326"
+ROHdf$V1[ROHdf$V1 == "39654"] <- "BO39654"
+ROHdf$V1[ROHdf$V1 == "22832"] <- "BO22832"
+ROHdf$V1[ROHdf$V1 == "21401"] <- "BO21401"
+ROHdf$V1[ROHdf$V1 == "39653"] <- "LS39653"
+ROHdf$V1[ROHdf$V1 == "22426"] <- "LS22426"
+ROHdf$V1[ROHdf$V1 == "39590"] <- "LS39590"
+ROHdf$V1[ROHdf$V1 == "39650"] <- "LS39650"
+ROHdf$V1[ROHdf$V1 == "39651"] <- "LS39651"
+ROHdf$V1[ROHdf$V1 == "21681"] <- "LS21681"
+ROHdf$V1[ROHdf$V1 == "45994"] <- "LS45994"
+ROHdf$V1 <- factor(ROHdf$V1, levels = c("BG21332", "BG21350", "EM20917", "EM34590", "EM27689", "EM27694", "BO35324", "BO35326", "BO39654", "BO22832","BO21401", "BO45932", "BO45933", "LS39653", "LS22426", "LS39590", "LS39650", "LS39651","LS21681" , "LS45994"))
+
+# Now we can use the ggplot function to create the plot
+lengthbins<- ggplot(data = ROHdf, aes(x = V1, y = V2, fill = as.character(bin))) +
+  geom_col(position = "stack") +
+  scale_y_continuous(name = "Total length ROH (kb)", labels = scales::comma) +
+  scale_x_discrete(name ="Caribou ID", guide = guide_axis(angle = 90)) +
+  theme(legend.title = element_text(size = 12, face = "bold")) +
+  scale_fill_brewer(palette="YlOrRd", name = "ROH size class", labels=c("250kb-500kb", "500kb-1Mb", "1-2Mb",">2Mb")) + theme_bw() +
+  annotate("text", x = 1, y=780000, label="B") 
+
+#counts plot
+countsbins <- ggplot(data = ROHdf, aes(x = V1, fill = as.character(bin))) +
+  geom_bar() +
+  scale_x_discrete(name= "Caribou ID", guide = guide_axis(angle = 90)) +
+  ylab("Number of ROH") +
+  theme(legend.title = element_text(size = 12, face = "bold")) +
+  scale_fill_brewer(palette="YlOrRd", name = "ROH size class", labels=c("250kb-500kb", "500kb-1Mb", "1-2Mb",">2Mb")) + theme_bw() +
+  annotate("text", x = 1, y=1400, label="A") 
+
+#plot together and save the plot
+library("patchwork")
+
+countsbins + lengthbins + plot_layout(ncol=2, nrow=1, guides="collect") & theme(legend.position="right")
+
+ggsave("plink_ROH_bins.pdf", dpi=300, width=11, height=6.5, units="in")
+ggsave("plink_ROH_bins.png", width=11, height=6.5, units="in")
