@@ -1,0 +1,179 @@
+##run plink on VCF file
+
+#filtered VCF ##
+#strict params
+#250kb and 1000MB 
+plink --vcf ../caribou_autosomes_filter_nomissing.recode.vcf --homozyg --allow-extra-chr --homozyg-snp 100 --homozyg-kb 250 --homozyg-density 50 --homozyg-gap 200 --homozyg-window-snp 100 --homozyg-window-het 1 --homozyg-window-missing 1 --homozyg-window-threshold 0.05 --homozyg-het 5 --out caribou_plink_250kb_stricterparam_nomissing
+plink --vcf ../caribou_autosomes_filter_nomissing.recode.vcf --homozyg --allow-extra-chr --homozyg-snp 100 --homozyg-kb 1000 --homozyg-density 50 --homozyg-gap 200 --homozyg-window-snp 100 --homozyg-window-het 1 --homozyg-window-missing 1 --homozyg-window-threshold 0.05 --homozyg-het 5 --out caribou_plink_1Mb_stricterparam_nomissing
+
+#less strict params
+#250kb and 1000MB 
+plink --vcf ../caribou_autosomes_filter_nomissing.recode.vcf --homozyg --allow-extra-chr --homozyg-snp 50 --homozyg-kb 250 --homozyg-density 100 --homozyg-gap 1000 --homozyg-window-snp 50 --homozyg-window-het 2 --homozyg-window-missing 5 --homozyg-window-threshold 0.05 --homozyg-het 10 --out caribou_plink_250kb_lessstrictparam_nomissing
+plink --vcf ../caribou_autosomes_filter_nomissing.recode.vcf --homozyg --allow-extra-chr --homozyg-snp 50 --homozyg-kb 1000 --homozyg-density 100 --homozyg-gap 1000 --homozyg-window-snp 50 --homozyg-window-het 2 --homozyg-window-missing 5 --homozyg-window-threshold 0.05 --homozyg-het 10 --out caribou_plink_1Mb_lessstrictparam_nomissing
+
+#then import into R for plotting
+
+library(tidyverse)
+
+#less param #250kb window - example
+
+#import data
+plinkROH_250k = read_csv("caribou_plink_250kb_lessparam_nomissing.csv", col_names = T)
+
+#remove empty column
+plinkROH_250k <- plinkROH_250k[,-1]
+
+#add ID names
+plinkROH_250k$IDname <- c("EM20917", "BG21332", "BG21350", "BO21401", "LS21681", "LS22426", "BO22832", "EM27689", "EM27694", "EM34590", "BO35324", "BO35326", "LS39590", "LS39650", "LS39651" , "LS39653","BO39654", "BO45932", "BO45933", "LS45994")
+
+#Order IDs for plotting
+plinkROH_250k$IDname <- factor(plinkROH_250k$IDname, levels = c("BG21332", "BG21350", "EM20917", "EM34590", "EM27689", "EM27694", "BO35324", "BO35326", "BO39654", "BO22832","BO21401", "BO45932", "BO45933", "LS39653", "LS22426", "LS39590", "LS39650", "LS39651","LS21681" , "LS45994"))
+
+#add a population column to colour the plot
+plinkROH_250k$pop<-substr(plinkROH_250k$IDname,1,2)
+plinkROH_250k$pop <- factor(plinkROH_250k$pop, levels = c("BG", "EM", "BO", "LS"), labels = c("Barren-ground", "Eastern Migratory", "Boreal", "Lake Superior"))
+
+#add FROH column
+#total length of ROH (kb) -> convert to bases and divide by # bases in CHR
+plinkROH_250k$FROH <- (plinkROH_250k$KB*1000)/2188797026
+
+FROHplot <- ggplot(data=plinkROH_250k, aes(x=IDname, y=FROH, fill=pop)) +
+  geom_bar(stat="identity") + 
+  scale_fill_manual(values=c('#8370bf','#EE7F7F', '#5C8944', '#175676')) +
+  scale_x_discrete(guide = guide_axis(angle = 90)) +
+  xlab("Caribou ID") +
+  labs(fill = "Legend") +
+  theme_bw()  +
+  annotate("text", x = 1, y=0.4, label="A") 
+
+
+N_ROHplot <- ggplot(data=plinkROH_250k, aes(x=IDname, y=NSEG, fill=pop)) +
+  geom_bar(stat="identity") + 
+  scale_fill_manual(values=c('#8370bf','#EE7F7F', '#5C8944', '#175676')) +
+  scale_x_discrete(guide = guide_axis(angle = 90)) +
+  xlab("Caribou ID") +
+  ylab("Number of ROH") +
+  labs(fill = "Legend") +
+  theme_bw()  +
+  annotate("text", x = 1, y=1020, label="B") 
+
+length_ROHplot <- ggplot(data=plinkROH_250k, aes(x=IDname, y=KB, fill=pop)) +
+  geom_bar(stat="identity") + 
+  scale_fill_manual(values=c('#8370bf','#EE7F7F', '#5C8944', '#175676')) +
+  scale_x_discrete(guide = guide_axis(angle = 90)) +
+  xlab("Caribou ID") +
+  ylab("ROH length (kb)") +
+  labs(fill = "Legend") +
+  theme_bw()  +
+  annotate("text", x = 1, y=9.2e+05, label="C") 
+
+avlength_ROHplot <- ggplot(data=plinkROH_250k, aes(x=IDname, y=KBAVG, fill=pop)) +
+  geom_bar(stat="identity") + 
+  scale_fill_manual(values=c('#8370bf','#EE7F7F', '#5C8944', '#175676')) +
+  scale_x_discrete(guide = guide_axis(angle = 90)) +
+  xlab("Caribou ID") +
+  ylab("Av. Length of ROH (kb)") +
+  labs(fill = "Legend") +
+  theme_bw()  +
+  annotate("text", x = 1, y=1900, label="D") 
+
+#example of how to save plots together with patchwork
+library("patchwork")
+smallwindow_lessparam_plot <- FROHplot + N_ROHplot + length_ROHplot + avlength_ROHplot + plot_layout(ncol=2, nrow=2, guides="collect") & theme(legend.position="right")
+
+
+###ROHan analysis ##
+#other paramters to test: size (1000000), rohmu 5e-5
+rohan --tstv 2.09 --rohmu 5e-4  --size 250000 --auto autosomes_caribou.txt -t 12 -o rohan${1}_250k_5x104 /reference/Dovetail_hirise_May2021_final_assembly.fa ${1}_NoDupsRG.bam
+
+
+#plot ROHan output in R
+
+##250k relaxed param - example
+#import data
+rohan_250k_4 = read_csv("250kx104_rohan_data.csv", col_names = F)
+
+#add ID names
+rohan_250k_4$IDname <- c("EM20917", "BG21332", "BG21350", "BO21401", "LS21681", "LS22426", "BO22832", "EM27689", "EM27694", "EM34590", "BO35324", "BO35326", "LS39590", "LS39650", "LS39651" , "LS39653","BO39654", "BO45932", "BO45933", "LS45994")
+
+#Order IDs for plotting
+rohan_250k_4$IDname <- factor(rohan_250k_4$IDname, levels = c("BG21332", "BG21350", "EM20917", "EM34590", "EM27689", "EM27694", "BO35324", "BO35326", "BO39654", "BO22832","BO21401", "BO45932", "BO45933", "LS39653", "LS22426", "LS39590", "LS39650", "LS39651","LS21681" , "LS45994"))
+
+#add a population column to colour the plot
+rohan_250k_4$pop<-substr(rohan_250k_4$IDname,1,2)
+rohan_250k_4$pop <- factor(rohan_250k_4$pop, levels = c("BG", "EM", "BO", "LS"), labels = c("Barren-ground", "Eastern Migratory", "Boreal", "Lake Superior"))
+
+#add FROH column
+#percentROH --> convert to proportion
+rohan_250k_4$FROH <- rohan_250k_4$X1/100
+rohan_250k_4$FROHmin <- rohan_250k_4$X2/100
+rohan_250k_4$FROHmax <- rohan_250k_4$X3/100
+
+FROHplot250k_4 <- ggplot(data=rohan_250k_4, aes(x=IDname, y=FROH, fill=pop)) +
+  geom_bar(stat="identity") + 
+  geom_errorbar(aes(ymin=FROHmin, ymax=FROHmax)) +
+  scale_fill_manual(values=c('#8370bf','#EE7F7F', '#5C8944', '#175676')) +
+  scale_x_discrete(guide = guide_axis(angle = 90)) +
+  xlab("Caribou ID") +
+  labs(fill = "Legend") +
+  theme_bw()  +
+  annotate("text", x = 1, y=0.25, label="A") 
+
+avlength_ROHplot250k_4 <- ggplot(data=rohan_250k_4, aes(x=IDname, y=X4/1000, fill=pop)) +
+  geom_bar(stat="identity") + 
+  geom_errorbar(aes(ymin=X5/1000, ymax=X6/1000)) +
+  scale_fill_manual(values=c('#8370bf','#EE7F7F', '#5C8944', '#175676')) +
+  scale_x_discrete(guide = guide_axis(angle = 90)) +
+  xlab("Caribou ID") +
+  ylab("Av. Length of ROH (kb)") +
+  labs(fill = "Legend") +
+  theme_bw()  + annotate("text", x = 1, y=9000, label="B") 
+  
+  
+  
+  
+  ###ROHan heterzygosity estimates plots
+  
+  #first in Linux, pull theta estimates inside and outside of ROH
+  #column 5 is the estimated value, 6 is the min, 7 is the max
+  
+  for file in *.summary.txt; do
+    theta_NOroh=$(grep "Genome-wide theta outside ROH" $file | awk '{print $5, $6, $7}')
+    theta_roh=$(grep "Genome-wide theta inc. ROH:" $file | awk '{print $5, $6, $7}')
+    echo "$theta_NOroh $theta_roh" >> theta_all.txt
+done
+
+#replace spaces with commas
+tr -s '[:blank:]' ',' < theta_all.txt > theta_all.csv
+  
+  ###plot rohan theta inside and outside ROH
+#import data
+library(readr)
+rohan_theta = read_csv("theta_all.csv", col_names = T)
+
+ library(ggplot2)
+ 
+  # create a new data frame for plotting
+  plot_data <- data.frame(IDname = rep(rohan_theta$IDname, 2),
+                          theta = c(rohan_theta$theta_noROH, rohan_theta$theta_wROH),
+                          min = c(rohan_theta$min_noROH, rohan_theta$min_wROH),
+                          max = c(rohan_theta$max_noROH, rohan_theta$max_wROH),
+                          pop = rep(rohan_theta$pop, 2),
+                          ROH = rep(c("noROH", "wROH"), each = nrow(rohan_theta)))
+  
+  # set the order of the levels for plotting
+  plot_data$IDname <- factor(plot_data$IDname,
+                             levels = c("BG21332", "BG21350", "EM20917", "EM34590", "EM27689", "EM27694", "BO35324", "BO35326", "BO39654", "BO22832","BO21401", "BO45932", "BO45933", "LS39653", "LS22426", "LS39590", "LS39650", "LS39651","LS21681" , "LS45994"))
+  
+  # create the plot
+  ggplot(plot_data, aes(x = IDname, y = theta, group = ROH, color = pop)) +
+    geom_point(aes(shape = ROH), size = 3, position = position_dodge(width = 0.8)) +
+    geom_errorbar(aes(ymin = min, ymax = max), width = 0.2, position = position_dodge(width = 0.8)) +
+    scale_color_manual(values = c('#8370bf','#EE7F7F', '#5C8944', '#175676'), 
+                       labels = c("Barren-ground", "Eastern Migratory", "Boreal", "Lake Superior")) +
+    scale_shape_manual(values = c(24, 16), labels=c("Outside of ROH", "Including ROH")) +
+    scale_x_discrete(guide = guide_axis(angle = 90)) +
+    xlab("Caribou ID") +
+    ylab("Genome-wide Heterozygosity") +
+    theme_bw()   +
+    labs(shape = "Heterozygosity estimates", color = "Legend") 
