@@ -2,7 +2,7 @@
 
 ##Part 1: trim and align reads, filter BAM, call SNPs, create grouped genotyped VCFs 
 
-##Part 2: filter VCFs & convert to inputs for analyses 
+##Part 2: filter VCFs, calculate inbreeding coefficient (F) and TsTv, then convert to inputs for analyses 
 
 ##Parts 3: Run NGSadmix, plot outputs in R, compare log likelihoods across runs
 
@@ -10,4 +10,4 @@
 
 ##Part 5: Run Treemix, plot outputs in R, perform ad hoc test for number of migration events 
 
-##Part 6: Run PLINK ROH on VCF, plot outputs in R
+##Part 6: Calculate ROH with PLINK and ROHan, plot outputs in R
