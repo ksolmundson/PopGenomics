@@ -1,4 +1,4 @@
-#pophistory assembly and analyses for whole genomes
+#assembly and analyses for medium-high coverage whole genomes
 
 ##Part 1: trim and align reads, filter BAM, call SNPs, create grouped genotyped VCFs 
 
