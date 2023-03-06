@@ -48,6 +48,10 @@ vcftools --vcf allcaribou_autosomes_filter.recode.vcf --max-missing 1 --recode -
 
 grep -vw "NaN" allcaribou_autosomes_filter_nomissing.recode.vcf > allcaribou_autosomes_filter_nomiss_noNA.vcf
 
+#calculate inbreeding coefficient (F) and tstv in vcftools
+vcftools --vcf allcaribou_autosomes_filter_nomissing.recode.vcf --out vcftools_F_nomissing --het
+vcftools --vcf allcaribou_autosomes_filter_nomissing.recode.vcf --out vcftools_TsTv_nomissing --TsTv-summary
+
 ## convert from VCF to inputs for downstream analyses ##
 ## create NGSAdmix input ##
 #convert vcf to beagle format for NGSAdmix with atlas #use the caribou vcf file 
