@@ -3,13 +3,13 @@
 #filtered VCF ##
 #strict params
 #250kb and 1000MB 
-plink --vcf ../caribou_autosomes_filter_nomissing.recode.vcf --homozyg --allow-extra-chr --homozyg-snp 100 --homozyg-kb 250 --homozyg-density 50 --homozyg-gap 200 --homozyg-window-snp 100 --homozyg-window-het 1 --homozyg-window-missing 1 --homozyg-window-threshold 0.05 --homozyg-het 5 --out caribou_plink_250kb_stricterparam_nomissing
-plink --vcf ../caribou_autosomes_filter_nomissing.recode.vcf --homozyg --allow-extra-chr --homozyg-snp 100 --homozyg-kb 1000 --homozyg-density 50 --homozyg-gap 200 --homozyg-window-snp 100 --homozyg-window-het 1 --homozyg-window-missing 1 --homozyg-window-threshold 0.05 --homozyg-het 5 --out caribou_plink_1Mb_stricterparam_nomissing
+plink --vcf ../allcaribou_autosomes_filter_nomissing.recode.vcf --homozyg --allow-extra-chr --homozyg-snp 100 --homozyg-kb 250 --homozyg-density 50 --homozyg-gap 200 --homozyg-window-snp 100 --homozyg-window-het 1 --homozyg-window-missing 1 --homozyg-window-threshold 0.05 --homozyg-het 5 --out caribou_plink_250kb_stricterparam_nomissing
+plink --vcf ../allcaribou_autosomes_filter_nomissing.recode.vcf --homozyg --allow-extra-chr --homozyg-snp 100 --homozyg-kb 1000 --homozyg-density 50 --homozyg-gap 200 --homozyg-window-snp 100 --homozyg-window-het 1 --homozyg-window-missing 1 --homozyg-window-threshold 0.05 --homozyg-het 5 --out caribou_plink_1Mb_stricterparam_nomissing
 
 #less strict params
 #250kb and 1000MB 
-plink --vcf ../caribou_autosomes_filter_nomissing.recode.vcf --homozyg --allow-extra-chr --homozyg-snp 50 --homozyg-kb 250 --homozyg-density 100 --homozyg-gap 1000 --homozyg-window-snp 50 --homozyg-window-het 2 --homozyg-window-missing 5 --homozyg-window-threshold 0.05 --homozyg-het 10 --out caribou_plink_250kb_lessstrictparam_nomissing
-plink --vcf ../caribou_autosomes_filter_nomissing.recode.vcf --homozyg --allow-extra-chr --homozyg-snp 50 --homozyg-kb 1000 --homozyg-density 100 --homozyg-gap 1000 --homozyg-window-snp 50 --homozyg-window-het 2 --homozyg-window-missing 5 --homozyg-window-threshold 0.05 --homozyg-het 10 --out caribou_plink_1Mb_lessstrictparam_nomissing
+plink --vcf ../allcaribou_autosomes_filter_nomissing.recode.vcf --homozyg --allow-extra-chr --homozyg-snp 50 --homozyg-kb 250 --homozyg-density 100 --homozyg-gap 1000 --homozyg-window-snp 50 --homozyg-window-het 2 --homozyg-window-missing 5 --homozyg-window-threshold 0.05 --homozyg-het 10 --out caribou_plink_250kb_lessstrictparam_nomissing
+plink --vcf ../allcaribou_autosomes_filter_nomissing.recode.vcf --homozyg --allow-extra-chr --homozyg-snp 50 --homozyg-kb 1000 --homozyg-density 100 --homozyg-gap 1000 --homozyg-window-snp 50 --homozyg-window-het 2 --homozyg-window-missing 5 --homozyg-window-threshold 0.05 --homozyg-het 10 --out caribou_plink_1Mb_lessstrictparam_nomissing
 
 #then import into R for plotting
 
